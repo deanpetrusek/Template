@@ -19,7 +19,7 @@ namespace Template
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMediatR(typeof(CoreHandler).Assembly);
+            services.AddMediatR(typeof(Core.Domain.Entities.User).Assembly);
             services.AddMediatR(typeof(Data.Context).Assembly);
             services.AddMvc();
 

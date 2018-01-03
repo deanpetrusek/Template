@@ -25,9 +25,20 @@ namespace Template.Data
         }
     }
 
+    public class UserQuery: IRequest<User>
+    {
+        public int Id { get; }
+
+        public UserQuery(int id)
+        {
+            Id = id;
+        }
+    }
+
     public class UsersHandler : 
         IRequestHandler<UsersQuery, IEnumerable<User>>, 
-        IRequestHandler<AddUser, User>
+        IRequestHandler<AddUser, User>,
+        IRequestHandler<UserQuery, User>
     {
         public Context Context { get; }
 
@@ -44,13 +55,22 @@ namespace Template.Data
             }
         }
 
-        public async Task<User> Handle(AddUser notification, CancellationToken cancellationToken)
+        public async Task<User> Handle(AddUser command, CancellationToken cancellationToken)
         {
             var connectionString = Context.ConnectionString;
             using (IDbConnection db = new SqlConnection(connectionString))
             {
-                var id = await db.ExecuteAsync("INSERT domain.users(FirstName, LastName) VALUES (@FirstName, @LastName)", new { FirstName = notification.FirstName, LastName = notification.LastName });
-                return await db.QuerySingleAsync<User>("SELECT * FROM domain.Users WHERE UserID = @id", new { id = id });
+                var id = await db.ExecuteAsync("INSERT domain.users(FirstName, LastName) VALUES (@FirstName, @LastName)", new { FirstName = command.FirstName, LastName = command.LastName });
+                return await db.QuerySingleAsync<User>("SELECT * FROM domain.Users WHERE UsersId = @id", new { id = id });
+            }
+        }
+
+        public async Task<User> Handle(UserQuery query, CancellationToken cancellationToken)
+        {
+            var connectionString = Context.ConnectionString;
+            using (IDbConnection db = new SqlConnection(connectionString))
+            {
+                return await db.QuerySingleAsync<User>("Select * From domain.Users WHERE UsersId = @id", new { id = query.Id });
             }
         }
     }

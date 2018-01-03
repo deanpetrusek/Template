@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Template.Core.Domain;
 
 namespace Template.API
 {
@@ -23,7 +25,10 @@ namespace Template.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMediatR(typeof(Core.Domain.Entities.User).Assembly);
+            services.AddMediatR(typeof(Data.Context).Assembly);
             services.AddMvc();
+            services.AddSingleton<Data.Context>(context => new Data.Context(Configuration["Data:sql"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
