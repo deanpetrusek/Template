@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{5CCA1494-B15C-451B-A929-BEC290A792EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template.UI", "Template\Template.UI.csproj", "{5CCA1494-B15C-451B-A929-BEC290A792EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template.Core", "Template.Core\Template.Core.csproj", "{F5A52D01-7E46-4988-9080-33BC09319D70}"
 EndProject
