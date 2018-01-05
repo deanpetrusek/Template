@@ -3,15 +3,22 @@ namespace Template.Core.Domain.Entities
 {
     public class User
     {
-        public User(int id, string firstName, string lastName)
+        public User(string firstName, string lastName, int? id = null)
         {
-            Id = id;
+            FirstName = firstName;
+            LastName = lastName;
+
+            if (id.HasValue)
+                Id = id.Value;
+        }
+
+        public string FirstName { get; private set; }
+        public string LastName { get; private set; }
+        public int Id { get; set; }
+
+        public void ChangeName(string firstName, string lastName){
             FirstName = firstName;
             LastName = lastName;
         }
-
-        public string FirstName { get; }
-        public string LastName { get; }
-        public int Id { get; }
     }
 }

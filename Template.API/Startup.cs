@@ -25,10 +25,18 @@ namespace Template.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMediatR(typeof(Core.Domain.Entities.User).Assembly);
+            services.AddMediatR(typeof(TemplateContext).Assembly);
             services.AddMediatR(typeof(Data.Context).Assembly);
+
             services.AddMvc();
             services.AddSingleton<Data.Context>(context => new Data.Context(Configuration["Data:sql"]));
+            services.AddScoped<TemplateContext>(context =>
+            {
+                var mediator = context.GetService<IMediator>();
+                var root = mediator.Send(new TemplateContextQuery()).Result;
+
+                return root;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -7,38 +7,15 @@ using Dapper;
 using System.Data;
 using System.Data.SqlClient;
 using System.Collections.Generic;
+using Template.Core.Domain.Events.Users;
 
 namespace Template.Data
 {
-    public class UsersQuery: IRequest<IEnumerable<User>>
-    {
-    }
-
-    public class AddUser: IRequest<User> {
-        public string FirstName { get; }
-        public string LastName { get; }
-
-        public AddUser(string firstName, string lastName)
-        {
-            LastName = lastName;
-            FirstName = firstName;
-        }
-    }
-
-    public class UserQuery: IRequest<User>
-    {
-        public int Id { get; }
-
-        public UserQuery(int id)
-        {
-            Id = id;
-        }
-    }
-
     public class UsersHandler : 
-        IRequestHandler<UsersQuery, IEnumerable<User>>, 
-        IRequestHandler<AddUser, User>,
-        IRequestHandler<UserQuery, User>
+    INotificationHandler<Core.Domain.Events.Users.Added>,
+    INotificationHandler<Core.Domain.Events.Users.Deleted>,
+    INotificationHandler<Core.Domain.Events.Users.Updated>,
+    IRequestHandler<UsersQuery, IEnumerable<User>>
     {
         public Context Context { get; }
 
@@ -46,32 +23,73 @@ namespace Template.Data
             Context = context;
         }
 
+        private Task<User> GetUser(IDbConnection db, int id){
+            return db.QuerySingleAsync<User>("SELECT * FROM domain.Users WHERE UsersId = @id", new { id = id});
+        }
+
+        private Task<IEnumerable<User>> GetAllUsers(IDbConnection db)
+        {
+            return db.QueryAsync<User>("SELECT * FROM domain.Users");
+        }
+
+        private Task<int> DeleteUser(IDbConnection db, int id){
+            return db.ExecuteAsync("DELETE FROM domain.Users WHERE UsersId = @id", new { id = id });
+        }
+
+        private Task<int> InsertUser(IDbConnection db, string firstName, string lastName){
+            return db.ExecuteAsync(
+                "INSERT domain.users(FirstName, LastName) VALUES (@FirstName, @LastName)", 
+                new { FirstName = firstName, LastName = lastName });
+        }
+
+        private Task<int> UpdateUser(IDbConnection db, int id, string firstName, string lastName){
+            return db.ExecuteAsync(
+                "UPDATE domain.users SET FirstName = @firstName, LastName = @lastName WHERE UsersId = @id", 
+                new { firstName = firstName, lastName = lastName, id = id });
+        }
+
+        private async Task Execute(Func<IDbConnection, Task> func)
+        {
+            var connectionString = Context.ConnectionString;
+            using (IDbConnection db = new SqlConnection(connectionString))
+            {
+                await func(db);
+            }
+        }
+
+        public async Task Handle(Added addedEvent, CancellationToken cancellationToken)
+        {
+            await Execute(async db =>
+            {
+                var id = await InsertUser(db, addedEvent.User.FirstName, addedEvent.User.LastName);
+                addedEvent.User.Id = id;
+            });
+        }
+
+        public async Task Handle(Deleted notification, CancellationToken cancellationToken)
+        {
+            await Execute(async db =>
+            {
+                await DeleteUser(db, notification.User.Id);
+            });
+        }
+
+        public async Task Handle(Updated updatedEvent, CancellationToken cancellationToken)
+        {
+            var user = updatedEvent.User;
+            await Execute(async db =>
+            {
+                await UpdateUser(db, user.Id, user.FirstName, user.LastName);
+            });
+        }
+
         public async Task<IEnumerable<User>> Handle(UsersQuery request, CancellationToken cancellationToken)
         {
-            var connectionString = Context.ConnectionString;
-            using (IDbConnection db = new SqlConnection(connectionString))
-            {
-                return await db.QueryAsync<User>("Select * From domain.Users");
-            }
-        }
-
-        public async Task<User> Handle(AddUser command, CancellationToken cancellationToken)
-        {
-            var connectionString = Context.ConnectionString;
-            using (IDbConnection db = new SqlConnection(connectionString))
-            {
-                var id = await db.ExecuteAsync("INSERT domain.users(FirstName, LastName) VALUES (@FirstName, @LastName)", new { FirstName = command.FirstName, LastName = command.LastName });
-                return await db.QuerySingleAsync<User>("SELECT * FROM domain.Users WHERE UsersId = @id", new { id = id });
-            }
-        }
-
-        public async Task<User> Handle(UserQuery query, CancellationToken cancellationToken)
-        {
-            var connectionString = Context.ConnectionString;
-            using (IDbConnection db = new SqlConnection(connectionString))
-            {
-                return await db.QuerySingleAsync<User>("Select * From domain.Users WHERE UsersId = @id", new { id = query.Id });
-            }
+            IEnumerable<User> users = null;
+            await Execute(async db => {
+                users = await GetAllUsers(db);
+            });
+            return users;
         }
     }
 }

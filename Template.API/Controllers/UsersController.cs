@@ -9,20 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Template.API.Controllers
 {
-
-    public class UserDto
-    {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public int Id { get; set; }
-
-        public UserDto(Core.Domain.Entities.User user) {
-            this.FirstName = user.FirstName;
-            this.Id = user.Id;
-            this.LastName = user.LastName;
-        }
-    }
-
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
@@ -50,21 +36,29 @@ namespace Template.API.Controllers
 
         // POST api/values
         [HttpPost]
-        public async void Post([FromBody]UserDto user)
+        public async Task<IActionResult> Post([FromBody]UserDto user)
         {
+            if (user == null)
+                return BadRequest();
+            
             await Mediator.Send(new Core.Domain.UserActions.AddUser(user.FirstName, user.LastName));
+            return Ok();
         }
 
         // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put([FromBody]UserDto user)
+        public async Task<IActionResult> Put(int id, [FromBody]UserDto user)
         {
+            await Mediator.Send(new Core.Domain.UserActions.UpdateUser(id, user.FirstName, user.LastName));
+            return Ok();
         }
 
         // DELETE api/values/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            await Mediator.Send(new Core.Domain.UserActions.DeleteUser(id));
+            return Ok();
         }
     }
 }

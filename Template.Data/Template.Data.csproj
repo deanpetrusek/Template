@@ -11,4 +11,7 @@
   <ItemGroup>
     <Folder Include="POCOs\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Template.Core\Template.Core.csproj" />
+  </ItemGroup>
 </Project>

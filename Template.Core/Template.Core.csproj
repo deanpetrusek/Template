@@ -11,11 +11,10 @@
     <Folder Include="Domain\" />
     <Folder Include="Domain\Entities\" />
     <Folder Include="Domain\UserActions\" />
+    <Folder Include="Domain\Events\" />
+    <Folder Include="Domain\Events\Users\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Class1.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Template.Data\Template.Data.csproj" />
   </ItemGroup>
 </Project>
